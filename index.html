@@ -3,220 +3,272 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Daftar Hadir Rapat Koordinasi</title>
-    <!-- Memuat Tailwind CSS untuk styling -->
+    <title>Daftar Hadir Rapat</title>
+    <!-- Muat Tailwind CSS dari CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Memuat library Signature Pad -->
-    <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
     <style>
-        /* Style tambahan untuk canvas tanda tangan */
-        .signature-canvas {
-            border: 2px dashed #cbd5e1;
-            border-radius: 0.5rem;
-            width: 100%;
-            height: 200px;
+        /* Menggunakan font Inter bawaan Tailwind */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Style tambahan untuk canvas agar terlihat lebih baik */
+        #signaturePad {
             cursor: crosshair;
         }
     </style>
 </head>
-<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4 font-sans">
-    
-    <div class="bg-white p-8 rounded-lg shadow-xl w-full max-w-lg">
-        
-        <!-- Judul Utama -->
-        <div class="text-center mb-6">
-            <h1 class="text-2xl font-bold text-gray-800">
-                Daftar Hadir Rapat Koordinasi
-            </h1>
-            <h2 class="text-xl text-gray-600">Sewa Kantor</h2>
-        </div>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
 
-        <!-- Formulir Daftar Hadir -->
-        <form id="attendance-form" class="space-y-4">
-            
-            <!-- Input Nama -->
-            <div>
+    <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-md">
+        
+        <!-- Judul Form -->
+        <h1 class="text-2xl font-bold text-center text-gray-800 mb-2">Daftar Hadir Rapat Koordinasi</h1>
+        <p class="text-center text-gray-600 mb-6">Sewa Kantor</p>
+
+        <!-- Formulir -->
+        <form id="attendanceForm" novalidate>
+            <!-- Input Nama Lengkap -->
+            <div class="mb-4">
                 <label for="nama" class="block text-sm font-medium text-gray-700 mb-1">Nama Lengkap</label>
                 <input type="text" id="nama" name="nama" required
-                       class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                       class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                <p id="namaError" class="text-red-500 text-xs mt-1 hidden">Nama lengkap wajib diisi.</p>
             </div>
 
-            <!-- Input Unit -->
-            <div>
+            <!-- Input Unit / Instansi -->
+            <div class="mb-6">
                 <label for="unit" class="block text-sm font-medium text-gray-700 mb-1">Unit / Instansi</label>
                 <input type="text" id="unit" name="unit" required
-                       class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                       class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                <p id="unitError" class="text-red-500 text-xs mt-1 hidden">Unit / Instansi wajib diisi.</p>
             </div>
 
             <!-- Area Tanda Tangan -->
-            <div>
+            <div class="mb-4">
                 <label class="block text-sm font-medium text-gray-700 mb-1">Tanda Tangan</label>
-                <canvas id="signature-pad" class="signature-canvas"></canvas>
-                <div class="text-right mt-2">
-                    <button type="button" id="clear-signature" 
-                            class="text-sm text-gray-600 hover:text-red-500">
-                        Bersihkan Tanda Tangan
-                    </button>
+                <div class="relative w-full">
+                    <canvas id="signaturePad" class="w-full h-40 border border-gray-300 rounded-md bg-gray-50"></canvas>
                 </div>
-            </div>
-
-            <!-- Tombol Submit -->
-            <div class="pt-2">
-                <button type="submit" id="submit-button" 
-                        class="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-md shadow-lg
-                               hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50
-                               disabled:bg-gray-400 disabled:cursor-not-allowed">
-                    Kirim Kehadiran
+                <button type="button" id="clearButton" class="text-xs text-blue-600 hover:text-blue-800 mt-2">
+                    Bersihkan Tanda Tangan
                 </button>
+                <p id="ttdError" class="text-red-500 text-xs mt-1 hidden">Tanda tangan wajib diisi.</p>
             </div>
+
+            <!-- Tombol Kirim -->
+            <button type="submit" id="submitButton"
+                    class="w-full bg-blue-600 text-white py-2.5 px-4 rounded-md font-semibold shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-gray-400 disabled:cursor-not-allowed transition duration-150">
+                Kirim Daftar Hadir
+            </button>
+
+            <!-- Pesan Status -->
+            <p id="statusMessage" class="text-center mt-4 text-sm"></p>
         </form>
-
-        <!-- Pesan Status (Success/Error) -->
-        <div id="message-container" class="mt-4 text-center">
-            <div id="success-message" class="hidden p-3 rounded-md bg-green-100 text-green-800">
-                Kehadiran Anda berhasil dicatat. Terima kasih!
-            </div>
-            <div id="error-message" class="hidden p-3 rounded-md bg-red-100 text-red-800">
-                Gagal mengirim. Silakan coba lagi.
-            </div>
-            <div id="validation-message" class="hidden p-3 rounded-md bg-yellow-100 text-yellow-800">
-                <!-- Pesan validasi akan diisi oleh JS -->
-            </div>
-        </div>
-
     </div>
 
     <script>
-        // --- KONFIGURASI PENTING ---
-        // GANTI URL INI dengan URL Web App dari Google Apps Script Anda setelah di-deploy.
-        const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycby-RwcrHL9GfThavj5CQ8jVJU4rXMbASPO2LMCmZjn03Toq9_CA4-Z7lYx8_JU-zdkz/exec";
-        // -------------------------
+        // =======================================================================
+        // KONFIGURASI: GANTI DENGAN URL WEB APP GOOGLE APPS SCRIPT ANDA
+        // =======================================================================
+        const URL_WEB_APP_GAS = "https://script.google.com/macros/s/AKfycbwekZUCynAQ7TD3u3oBAu0nhggFzNXltWnS_ncPMZopOS52Mq_LrtddYURzZXfa7aUyMA/exec";
+        // =======================================================================
 
-        // Inisialisasi Elemen DOM
-        const canvas = document.getElementById("signature-pad");
-        const signaturePad = new SignaturePad(canvas, {
-            backgroundColor: 'rgb(255, 255, 255)'
-        });
-        
-        const form = document.getElementById("attendance-form");
-        const clearButton = document.getElementById("clear-signature");
-        const submitButton = document.getElementById("submit-button");
-        
-        const successMessage = document.getElementById("success-message");
-        const errorMessage = document.getElementById("error-message");
-        const validationMessage = document.getElementById("validation-message");
 
-        // Fungsi untuk menyesuaikan ukuran canvas saat layar diubah
-        function resizeCanvas() {
-            const ratio = Math.max(window.devicePixelRatio || 1, 1);
-            canvas.width = canvas.offsetWidth * ratio;
-            canvas.height = canvas.offsetHeight * ratio;
-            canvas.getContext("2d").scale(ratio, ratio);
-            signaturePad.clear(); // Hapus tanda tangan saat resize
-        }
-        
-        window.addEventListener("resize", resizeCanvas);
-        resizeCanvas();
-
-        // Fungsi untuk menyembunyikan semua pesan
-        function hideMessages() {
-            successMessage.classList.add("hidden");
-            errorMessage.classList.add("hidden");
-            validationMessage.classList.add("hidden");
-        }
-
-        // Fungsi untuk menampilkan pesan validasi
-        function showValidation(message) {
-            hideMessages();
-            validationMessage.textContent = message;
-            validationMessage.classList.remove("hidden");
-        }
-
-        // Event listener untuk tombol "Bersihkan"
-        clearButton.addEventListener("click", () => {
-            signaturePad.clear();
-            hideMessages();
-        });
-
-        // Event listener untuk "Submit" formulir
-        form.addEventListener("submit", (event) => {
-            event.preventDefault(); // Mencegah form submit default
-            hideMessages();
-
-            // Ambil nilai dari form
-            const nama = document.getElementById("nama").value.trim();
-            const unit = document.getElementById("unit").value.trim();
-
-            // Validasi input
-            if (!nama || !unit) {
-                showValidation("Nama dan Unit wajib diisi.");
-                return;
-            }
-            if (signaturePad.isEmpty()) {
-                showValidation("Tanda tangan wajib diisi.");
-                return;
-            }
+        // Menunggu semua elemen halaman dimuat
+        window.addEventListener('load', () => {
             
-            if (GAS_WEB_APP_URL === "URL_WEB_APP_ANDA_DISINI") {
-                showValidation("Konfigurasi error: URL Google Apps Script belum diatur.");
-                return;
+            // Ambil elemen-elemen DOM
+            const form = document.getElementById('attendanceForm');
+            const namaInput = document.getElementById('nama');
+            const unitInput = document.getElementById('unit');
+            const namaError = document.getElementById('namaError');
+            const unitError = document.getElementById('unitError');
+            const ttdError = document.getElementById('ttdError');
+            const canvas = document.getElementById('signaturePad');
+            const ctx = canvas.getContext('2d');
+            const clearButton = document.getElementById('clearButton');
+            const submitButton = document.getElementById('submitButton');
+            const statusMessage = document.getElementById('statusMessage');
+
+            let drawing = false;
+            let isSigned = false; // Flag untuk validasi tanda tangan
+
+            // Fungsi untuk menyesuaikan ukuran canvas
+            function resizeCanvas() {
+                // Set ukuran internal canvas agar sesuai dengan ukuran CSS
+                // Ini penting agar goresan tidak buram atau terdistorsi
+                canvas.width = canvas.offsetWidth;
+                canvas.height = canvas.offsetHeight;
+                
+                // Set properti goresan (stroke)
+                ctx.strokeStyle = "#000000"; // Warna tinta
+                ctx.lineWidth = 2;          // Ketebalan tinta
+                ctx.lineCap = 'round';      // Ujung goresan bulat
+                ctx.lineJoin = 'round';     // Sambungan goresan bulat
+                isSigned = false; // Reset status tanda tangan saat resize
             }
 
-            // Nonaktifkan tombol submit saat proses
-            submitButton.disabled = true;
-            submitButton.textContent = "Mengirim...";
+            // Sesuaikan canvas saat halaman dimuat
+            resizeCanvas();
 
-            // Ubah tanda tangan menjadi format data URL (Base64)
-            const ttd_base64 = signaturePad.toDataURL("image/png");
+            // Event listener untuk resize window (jika orientasi HP berubah)
+            window.addEventListener('resize', resizeCanvas);
 
-            // Kirim data ke Google Apps Script
-            fetch(GAS_WEB_APP_URL, {
-                method: "POST",
-                mode: "cors", // Mode CORS diperlukan
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    nama: nama,
-                    unit: unit,
-                    ttd_base64: ttd_base64,
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === "success") {
-                    // Jika sukses
-                    successMessage.classList.remove("hidden");
-                    form.reset();
-                    signaturePad.clear();
-                } else {
-                    // Jika ada error dari server
-                    errorMessage.textContent = data.message || "Terjadi kesalahan di server.";
-                    errorMessage.classList.remove("hidden");
+            // Fungsi untuk mendapatkan posisi mouse/sentuhan
+            function getPos(e) {
+                const rect = canvas.getBoundingClientRect();
+                if (e.touches && e.touches.length > 0) {
+                    // Untuk sentuhan (touch)
+                    return {
+                        x: e.touches[0].clientX - rect.left,
+                        y: e.touches[0].clientY - rect.top
+                    };
                 }
-            })
-            .catch(error => {
-                // Jika ada error jaringan (seringkali error CORS atau error di sisi Google Apps Script)
-                console.error("Error:", error);
-                
-                let errorText = "Terjadi error jaringan. Silakan coba lagi.";
-                if (error.message.includes("Failed to fetch")) {
-                    // Berikan pesan yang lebih spesifik untuk error "Failed to fetch"
-                    errorText = "Error: 'Failed to fetch'. Ini BUKAN error HTML. Ini biasanya berarti script Google Apps Anda (Kode.gs) gagal (crash) atau belum di-deploy dengan benar (pastikan 'Who has access' adalah 'Anyone'). Cek log 'Executions' di Google Apps Script Anda untuk melihat error yang sebenarnya.";
-                } else {
-                    errorText = "Error jaringan: " + error.message;
+                // Untuk mouse
+                return {
+                    x: e.clientX - rect.left,
+                    y: e.clientY - rect.top
+                };
+            }
+
+            // Mulai menggambar
+            function startDrawing(e) {
+                e.preventDefault();
+                drawing = true;
+                isSigned = true; // Tandai bahwa user sudah mulai menggambar
+                ttdError.classList.add('hidden'); // Sembunyikan error jika ada
+                const { x, y } = getPos(e);
+                ctx.beginPath();
+                ctx.moveTo(x, y);
+            }
+
+            // Sedang menggambar
+            function draw(e) {
+                e.preventDefault();
+                if (!drawing) return;
+                const { x, y } = getPos(e);
+                ctx.lineTo(x, y);
+                ctx.stroke();
+            }
+
+            // Berhenti menggambar
+            function stopDrawing(e) {
+                e.preventDefault();
+                drawing = false;
+            }
+
+            // Fungsi untuk membersihkan canvas
+            function clearCanvas() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                isSigned = false; // Reset status tanda tangan
+            }
+
+            // Event Listeners untuk Mouse
+            canvas.addEventListener('mousedown', startDrawing);
+            canvas.addEventListener('mousemove', draw);
+            canvas.addEventListener('mouseup', stopDrawing);
+            canvas.addEventListener('mouseout', stopDrawing);
+
+            // Event Listeners untuk Sentuhan (Mobile)
+            canvas.addEventListener('touchstart', startDrawing);
+            canvas.addEventListener('touchmove', draw);
+            canvas.addEventListener('touchend', stopDrawing);
+
+            // Event listener untuk tombol "Bersihkan"
+            clearButton.addEventListener('click', clearCanvas);
+
+            // Event listener untuk submit form
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault(); // Mencegah form submit default
+                let isValid = true;
+
+                // Reset pesan error
+                namaError.classList.add('hidden');
+                unitError.classList.add('hidden');
+                ttdError.classList.add('hidden');
+                statusMessage.textContent = '';
+
+                // 1. Validasi Nama
+                if (namaInput.value.trim() === '') {
+                    namaError.classList.remove('hidden');
+                    isValid = false;
+                }
+
+                // 2. Validasi Unit
+                if (unitInput.value.trim() === '') {
+                    unitError.classList.remove('hidden');
+                    isValid = false;
+                }
+
+                // 3. Validasi Tanda Tangan
+                if (!isSigned) {
+                    ttdError.classList.remove('hidden');
+                    isValid = false;
                 }
                 
-                errorMessage.textContent = errorText;
-                errorMessage.classList.remove("hidden");
-            })
-            .finally(() => {
-                // Aktifkan kembali tombol submit
-                submitButton.disabled = false;
-                submitButton.textContent = "Kirim Kehadiran";
+                // 4. Cek URL GAS
+                if (URL_WEB_APP_GAS === "MASUKKAN_URL_WEB_APP_ANDA_DI_SINI") {
+                    statusMessage.textContent = "Error: URL Google Apps Script belum diatur.";
+                    statusMessage.className = "text-center mt-4 text-sm text-red-600";
+                    isValid = false;
+                }
+
+                // Jika tidak valid, hentikan proses
+                if (!isValid) return;
+
+                // Jika valid, lanjutkan pengiriman
+                submitButton.disabled = true;
+                statusMessage.textContent = "Mengirim data...";
+                statusMessage.className = "text-center mt-4 text-sm text-blue-600";
+
+                try {
+                    // Ambil data tanda tangan sebagai Base64
+                    const tandaTanganBase64 = canvas.toDataURL('image/png');
+
+                    // Buat objek data
+                    const data = {
+                        nama: namaInput.value.trim(),
+                        unit: unitInput.value.trim(),
+                        tandaTanganBase64: tandaTanganBase64
+                    };
+
+                    // Kirim data ke Google Apps Script
+                    const response = await fetch(URL_WEB_APP_GAS, {
+                        method: 'POST',
+                        mode: 'cors',
+                        cache: 'no-cache',
+                        headers: {
+                            'Content-Type': 'text/plain;charset=utf-file', // Dibuat text/plain agar tidak memicu preflight CORS
+                        },
+                        body: JSON.stringify(data) // Kirim sebagai string JSON
+                    });
+
+                    const result = await response.json();
+
+                    if (result.status === 'success') {
+                        // Jika berhasil
+                        statusMessage.textContent = "Berhasil terkirim! Terima kasih.";
+                        statusMessage.className = "text-center mt-4 text-sm text-green-600";
+                        form.reset();      // Kosongkan form
+                        clearCanvas();     // Kosongkan tanda tangan
+                    } else {
+                        // Jika gagal dari server
+                        throw new Error(result.message || 'Gagal menyimpan data.');
+                    }
+
+                } catch (error) {
+                    // Jika terjadi error (network atau lainnya)
+                    console.error('Error:', error);
+                    statusMessage.textContent = `Terjadi error: ${error.message}. Silakan coba lagi.`;
+                    statusMessage.className = "text-center mt-4 text-sm text-red-600";
+                } finally {
+                    // Aktifkan kembali tombol submit
+                    submitButton.disabled = false;
+                }
             });
         });
     </script>
 </body>
 </html>
+
 
