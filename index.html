@@ -196,9 +196,18 @@
                 }
             })
             .catch(error => {
-                // Jika ada error jaringan
+                // Jika ada error jaringan (seringkali error CORS atau error di sisi Google Apps Script)
                 console.error("Error:", error);
-                errorMessage.textContent = "Error jaringan: " + error.message;
+                
+                let errorText = "Terjadi error jaringan. Silakan coba lagi.";
+                if (error.message.includes("Failed to fetch")) {
+                    // Berikan pesan yang lebih spesifik untuk error "Failed to fetch"
+                    errorText = "Error: 'Failed to fetch'. Ini BUKAN error HTML. Ini biasanya berarti script Google Apps Anda (Kode.gs) gagal (crash) atau belum di-deploy dengan benar (pastikan 'Who has access' adalah 'Anyone'). Cek log 'Executions' di Google Apps Script Anda untuk melihat error yang sebenarnya.";
+                } else {
+                    errorText = "Error jaringan: " + error.message;
+                }
+                
+                errorMessage.textContent = errorText;
                 errorMessage.classList.remove("hidden");
             })
             .finally(() => {
